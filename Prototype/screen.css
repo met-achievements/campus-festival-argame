@@ -1,0 +1,13 @@
+/* Keep the page scale stable during taps; model viewers handle their own gestures. */
+html:root,
+body {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Avoid focus zoom on small text fields in mobile browsers. */
+input[type="text"],
+textarea {
+  font-size: max(16px, 1em);
+}

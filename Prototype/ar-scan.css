@@ -1,0 +1,85 @@
+/* Shared MindAR scanning screen, based on the D-building arrival screen. */
+.ar-scan {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  margin: 0;
+  pointer-events: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, rgba(3,8,12,.25), rgba(3,8,12,.06) 45%, rgba(3,8,12,.52));
+}
+.ar-scan *, .ar-scan-skip { box-sizing: border-box; }
+.ar-scan[hidden], .ar-scan-skip[hidden] { display: none !important; }
+.ar-scan-card {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(calc(100% - 24px), 430px);
+  padding: 16px 18px;
+  transform: translateX(-50%);
+  color: #fff8e8;
+  background: rgba(7,17,23,.86);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 15px 42px rgba(0,0,0,.32);
+  backdrop-filter: blur(9px);
+}
+.ar-scan-card .eyebrow {
+  margin: 0 0 5px;
+  color: #f2c66a;
+  font-size: .74rem;
+  font-weight: 900;
+  line-height: normal;
+  letter-spacing: .12em;
+}
+.ar-scan-card h1 { margin: 0 0 7px; font-size: 1.18rem; line-height: normal; }
+.ar-scan-card p:last-child { margin: 0; font-size: .9rem; line-height: 1.55; }
+.ar-scan-frame {
+  position: absolute;
+  inset: 25% 11% 23%;
+  border: 2px solid rgba(255,248,232,.78);
+  border-radius: 24px;
+  box-shadow: 0 0 0 999px rgba(3,8,12,.12), inset 0 0 28px rgba(94,227,228,.1);
+}
+.ar-scan-frame::before, .ar-scan-frame::after {
+  content: "";
+  position: absolute;
+  left: 9%; right: 9%; height: 2px;
+  background: linear-gradient(90deg, transparent, #5ee3e4, transparent);
+  box-shadow: 0 0 12px #5ee3e4;
+  animation: ar-scan-sweep 2.3s ease-in-out infinite alternate;
+}
+.ar-scan-frame::after { animation-delay: -1.15s; opacity: .36; }
+@keyframes ar-scan-sweep { from { top: 12%; } to { top: 86%; } }
+.ar-scan-skip {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 30;
+  width: min(calc(100% - 24px), 430px);
+  min-height: 48px;
+  padding: 13px 16px;
+  transform: translateX(-50%);
+  color: #fff8e8;
+  background: rgba(122,48,64,.96);
+  border: 1px solid #d9aa4f;
+  border-radius: 11px;
+  font: 900 .9rem system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ar-scan-skip:focus-visible { outline: 3px solid #5ee3e4; outline-offset: 3px; }
+@media (max-width: 360px) {
+  .ar-scan-card { padding: 14px; }
+  .ar-scan-card h1 { font-size: 1.08rem; }
+  .ar-scan-frame { inset: 29% 9% 22%; }
+}
+@media (max-height: 480px) and (orientation: landscape) {
+  .ar-scan-card { left: max(14px, env(safe-area-inset-left)); width: 42%; padding: 12px; transform: none; }
+  .ar-scan-card h1 { font-size: 1rem; }
+  .ar-scan-frame { inset: 11% 7% 20% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-scan-frame::before, .ar-scan-frame::after { animation: none; top: 50%; }
+}
