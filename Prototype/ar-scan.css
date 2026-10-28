@@ -8,8 +8,8 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: linear-gradient(180deg, rgba(3,8,12,.25), rgba(3,8,12,.06) 45%, rgba(3,8,12,.52));
 }
-.ar-scan *, .ar-scan-skip { box-sizing: border-box; }
-.ar-scan[hidden], .ar-scan-skip[hidden] { display: none !important; }
+.ar-scan * { box-sizing: border-box; }
+.ar-scan[hidden] { display: none !important; }
 .ar-scan-card {
   position: absolute;
   top: max(14px, env(safe-area-inset-top));
@@ -52,24 +52,6 @@
 }
 .ar-scan-frame::after { animation-delay: -1.15s; opacity: .36; }
 @keyframes ar-scan-sweep { from { top: 12%; } to { top: 86%; } }
-.ar-scan-skip {
-  position: fixed;
-  left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  z-index: 30;
-  width: min(calc(100% - 24px), 430px);
-  min-height: 48px;
-  padding: 13px 16px;
-  transform: translateX(-50%);
-  color: #fff8e8;
-  background: rgba(122,48,64,.96);
-  border: 1px solid #d9aa4f;
-  border-radius: 11px;
-  font: 900 .9rem system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.ar-scan-skip:focus-visible { outline: 3px solid #5ee3e4; outline-offset: 3px; }
 @media (max-width: 360px) {
   .ar-scan-card { padding: 14px; }
   .ar-scan-card h1 { font-size: 1.08rem; }
