@@ -121,7 +121,7 @@ function renderPostStory() {
     const done = yes(id === "b" ? "b-center-ar-success" : "g-object-ar-success");
     return `<div class="card mission"><img src="../Assets/icons/${icon}-icon.webp" alt=""><div><h3>${name}</h3><p>${hint}</p>${done ? '<span class="badge">回収済み</span>' : ""}</div><div class="actions">${done ? button("手紙を読み返す", `letter-${letter}`, "secondary") : button(`${id.toUpperCase()}館のゲームへ`, `go-${id}`)}</div></div>`;
   }).join("");
-  postMenu(recovered ? "残りの手紙を追え" : "二つの手がかりを追え", `あなたの回収 ${recovered}/2 · 全体 ${recovered * 2}/4`, `<div class="grid two">${missions}</div><p class="small post-help">現地で読み取れない場合は、各ゲームの「読み取りをスキップ」から進めます。</p>`);
+  postMenu(recovered ? "残りの手紙を追え" : "二つの手がかりを追え", `あなたの回収 ${recovered}/2 · 全体 ${recovered * 2}/4`, `<div class="grid two">${missions}</div>`);
 }
 
 function handlePostAction(action) {
