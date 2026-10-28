@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="g-puzzle-version" content="20261028-anchored1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="../screen.css?v=20261027">
+  <title>G館AR｜石のアートを取り戻せ</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --ink: #fff8e8;
+      --paper: #f4ead2;
+      --wine: #742d3a;
+      --gold: #d7a84a;
+      --green: #183d38;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #070b13;
+    }
+
+    body > video {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+    }
+
+    .a-canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 1 !important;
+    }
+
+    button,
+    input { font: inherit; }
+
+    .puzzle-card,
+    .answer-panel {
+      position: fixed;
+      left: 50%;
+      z-index: 20;
+      width: min(calc(100% - 24px), 430px);
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, .16);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .28);
+      backdrop-filter: blur(9px);
+    }
+
+    .puzzle-card {
+      top: max(14px, env(safe-area-inset-top));
+      padding: 15px 17px;
+      color: var(--ink);
+      background: rgba(9, 17, 25, .84);
+      border-radius: 17px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: #f1c66e;
+      font-size: .74rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: 1.12rem;
+    }
+
+    .scan-card p,
+    .puzzle-card p {
+      margin: 0;
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+
+    .puzzle-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      display: none;
+      background: transparent;
+    }
+
+    .puzzle-layer.is-visible { display: block; }
+
+    .move-hint {
+      position: absolute; left: 50%; bottom: 184px; z-index: 19;
+      transform: translateX(-50%); max-width: calc(100% - 24px);
+      padding: 8px 13px; border-radius: 999px; color: var(--ink);
+      background: rgba(10, 18, 25, .78); font-size: .82rem;
+      text-align: center; pointer-events: none;
+    }
+
+    .answer-panel {
+      bottom: max(14px, env(safe-area-inset-bottom));
+      padding: 14px;
+      color: var(--ink);
+      background: rgba(9, 17, 25, .9);
+      border-radius: 17px;
+    }
+
+    .answer-panel label {
+      display: block;
+      margin-bottom: 8px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .answer-input {
+      min-width: 0;
+      padding: 12px 13px;
+      color: #231c24;
+      background: rgba(255, 255, 255, .97);
+      border: 2px solid transparent;
+      border-radius: 11px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .answer-input:focus { border-color: var(--gold); }
+
+    .answer-button,
+    .back-button {
+      padding: 12px 16px;
+      color: var(--ink);
+      background: linear-gradient(180deg, #8f3d4c, var(--wine));
+      border: 1px solid #5d202b;
+      border-radius: 11px;
+      font-weight: 850;
+    }
+
+    .answer-feedback {
+      min-height: 2.6em;
+      margin: 8px 2px 0;
+      font-size: .84rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .clear-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(5, 8, 14, .72);
+      backdrop-filter: blur(7px);
+    }
+
+    .clear-layer.is-visible { display: grid; }
+
+    .clear-card {
+      width: min(100%, 420px);
+      padding: 25px 21px;
+      color: #2b2329;
+      background: var(--paper);
+      border: 3px double #9a7432;
+      border-radius: 19px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .42);
+    }
+
+    .clear-card .eyebrow { color: var(--wine); }
+    .clear-card h2 { margin: 0 0 10px; }
+    .clear-card p { margin: 0 0 17px; line-height: 1.7; }
+    .back-button { width: 100%; }
+    body.is-puzzle-view { background: #07101b; }
+    body.is-puzzle-view > video { display: none !important; }
+    body.is-puzzle-view .a-canvas { background: #07101b !important; }
+    body.is-puzzle-view .mindar-ui-overlay { display: none !important; }
+    body.is-puzzle-view .puzzle-layer { background: transparent; }
+    body.is-puzzle-view .puzzle-card,
+    body.is-puzzle-view .answer-panel {
+      color: #171717;
+      background: rgba(255, 255, 255, .94);
+      border-color: rgba(0, 0, 0, .16);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .12);
+      backdrop-filter: none;
+    }
+    body.is-puzzle-view .puzzle-card .eyebrow { color: #7a4e00; }
+    body.is-puzzle-view .move-hint {
+      color: #171717;
+      background: rgba(255, 255, 255, .94);
+      border-color: rgba(0, 0, 0, .18);
+    }
+    body.is-puzzle-view .answer-feedback { color: #171717; }
+
+    .model-status {
+      position: absolute;
+      top: 47%;
+      left: 50%;
+      z-index: 21;
+      width: min(calc(100% - 48px), 340px);
+      transform: translate(-50%, -50%);
+      padding: 16px;
+      color: #171717;
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid rgba(0, 0, 0, .16);
+      border-radius: 14px;
+      text-align: center;
+    }
+    .model-status p { margin: 0; line-height: 1.5; }
+    .model-status button { margin-top: 12px; }
+
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script>
+    if (window.AFRAME) AFRAME.registerComponent("fit-maboroshi-model", {
+      schema: { size: { type: "number", default: 0.35 } },
+      init() {
+        this.bounds = null;
+        this.el.addEventListener("model-loaded", () => {
+          const mesh = this.el.getObject3D("mesh");
+          if (!mesh) return;
+          // Measure without the invisible marker's zero matrix or its pixel-based scale.
+          const copy = mesh.clone(true);
+          copy.updateMatrixWorld(true);
+          const box = new AFRAME.THREE.Box3().setFromObject(copy);
+          this.bounds = { size: box.getSize(new AFRAME.THREE.Vector3()), center: box.getCenter(new AFRAME.THREE.Vector3()) };
+          this.fit();
+        });
+      },
+      update() { this.fit(); },
+      fit() {
+        const mesh = this.el.getObject3D("mesh");
+        if (!mesh || !this.bounds) return;
+        const { size, center } = this.bounds;
+        const longest = Math.max(size.x, size.y, size.z);
+        if (!Number.isFinite(longest) || longest <= 0) return;
+        const scale = this.data.size / longest;
+        mesh.scale.setScalar(scale);
+        mesh.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      }
+    });
+  </script>
+  <link rel="stylesheet" href="../ar-scan.css?v=20261026">
+</head>
+<body>
+  <section class="ar-scan" id="scanCard" aria-live="polite">
+    <div class="ar-scan-card">
+      <p class="eyebrow">G BUILDING / RECOVERY CODE</p>
+      <h1>像をカメラで読み取ってください</h1>
+      <p id="scanFeedback">像と台座が枠に入るように映してください。</p>
+    </div>
+    <div class="ar-scan-frame" aria-hidden="true"></div>
+  </section>
+
+  <main class="puzzle-layer" id="puzzleLayer">
+    <section class="puzzle-card">
+      <p class="eyebrow">STONE ART RECOVERY</p>
+      <h1>隠された復元コードを読め</h1>
+      <p>像を映したまま、左右にゆっくり移動して読める角度を探してください。</p>
+    </section>
+
+    <section class="model-status" id="modelStatus" role="status" hidden>
+      <p id="modelStatusText">立体文字を読み込んでいます…</p>
+      <button class="answer-button" id="retryModelButton" type="button" hidden>もう一度読み込む</button>
+    </section>
+    <div class="move-hint" id="movementHint">像を映したまま、見る位置を変えよう</div>
+
+    <form class="answer-panel" id="answerForm" hidden>
+      <label for="answerInput">何と読めた？</label>
+      <div class="answer-row">
+        <input
+          class="answer-input"
+          id="answerInput"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="答えを入力">
+        <button class="answer-button" type="submit">答える</button>
+      </div>
+      <p class="answer-feedback" id="answerFeedback" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <section class="clear-layer" id="clearLayer" aria-live="polite">
+    <div class="clear-card">
+      <p class="eyebrow">RECOVERY CODE FOUND</p>
+      <h2>「まぼろし」</h2>
+      <p>石のアートの復元コードを見つけた。<br>回収記録を調査端末へ保存しました。</p>
+      <button class="back-button" id="backButton" type="button">本編に戻る</button>
+    </div>
+  </section>
+
+  <button class="ar-scan-skip" id="skipArButton" type="button">読み取りをスキップ</button>
+
+  <a-scene id="arScene"
+    mindar-image="imageTargetSrc: ./targets/g-object.mind?v=20261027-d4g4; autoStart: true; maxTrack: 1; warmupTolerance: 1; missTolerance: 10; filterMinCF: 0.001; filterBeta: 1000; uiScanning: false; uiLoading: true;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded>
+    <a-assets>
+      <a-asset-item id="maboroshiAsset" src="./models/maboroshi.glb?v=20261027-white1"></a-asset-item>
+    </a-assets>
+    <a-camera id="puzzleCamera" position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="puzzleModelHolder" visible="false" position="0 0 0.15" rotation="0 70 0">
+      <a-entity id="puzzleModel" gltf-model="#maboroshiAsset" fit-maboroshi-model="size: 0.35"></a-entity>
+    </a-entity>
+    <a-entity id="gTarget" mindar-image-target="targetIndex: 0"></a-entity>
+    <a-entity id="gTarget1" mindar-image-target="targetIndex: 1"></a-entity>
+    <a-entity id="gTarget2" mindar-image-target="targetIndex: 2"></a-entity>
+    <a-entity id="gTarget3" mindar-image-target="targetIndex: 3"></a-entity>
+  </a-scene>
+
+  <script>
+    const ACCEPTED_ANSWERS = new Set(["まぼろし", "マボロシ", "幻", "maboroshi"]);
+    const SUCCESS_KEY = "g-object-ar-success";
+    const scanCard = document.getElementById("scanCard");
+    const scanFeedback = document.getElementById("scanFeedback");
+    const puzzleLayer = document.getElementById("puzzleLayer");
+    const puzzleModelHolder = document.getElementById("puzzleModelHolder");
+    const puzzleModel = document.getElementById("puzzleModel");
+    const answerForm = document.getElementById("answerForm");
+    const answerInput = document.getElementById("answerInput");
+    const answerFeedback = document.getElementById("answerFeedback");
+    const clearLayer = document.getElementById("clearLayer");
+    const backButton = document.getElementById("backButton");
+    const skipArButton = document.getElementById("skipArButton");
+    const arScene = document.getElementById("arScene");
+    const puzzleCamera = document.getElementById("puzzleCamera");
+    const modelStatus = document.getElementById("modelStatus");
+    const modelStatusText = document.getElementById("modelStatusText");
+    const retryModelButton = document.getElementById("retryModelButton");
+    const movementHint = document.getElementById("movementHint");
+    const gTargets = [...document.querySelectorAll("[mindar-image-target]")];
+    let unlocked = false;
+    let tracking = false;
+    let preview = false;
+    let cleared = false;
+    let activeTarget = null;
+    let hasShownModel = false;
+    let modelReady = Boolean(puzzleModel.getObject3D?.("mesh"));
+    let modelLoadFailed = false;
+    let modelLoadTimer = 0;
+    let wrongAttempts = 0;
+
+    function normalizeAnswer(value) {
+      return value.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
+    }
+    function showState() {
+      const canShow = unlocked && modelReady && (preview || tracking) && !cleared;
+      puzzleModelHolder.setAttribute("visible", canShow);
+      if (canShow) hasShownModel = true;
+      answerForm.hidden = !hasShownModel || cleared;
+      modelStatus.hidden = !unlocked || canShow || cleared;
+      retryModelButton.hidden = !modelLoadFailed;
+      if (modelStatus.hidden) return;
+      modelStatusText.textContent = modelLoadFailed
+        ? "立体文字を読み込めませんでした。もう一度お試しください。"
+        : !modelReady ? "立体文字を読み込んでいます…"
+        : "像をもう一度カメラに入れてください。認識すると文字が戻ります。";
+    }
+    function watchModelLoad() {
+      clearTimeout(modelLoadTimer);
+      if (modelReady) return;
+      modelLoadTimer = window.setTimeout(() => {
+        if (modelReady || !unlocked || cleared) return;
+        modelStatusText.textContent = "読み込みに時間がかかっています。通信を確認して、もう一度お試しください。";
+        retryModelButton.hidden = false;
+      }, 12000);
+    }
+    function unlockUi() {
+      if (unlocked) return;
+      unlocked = true;
+      scanCard.hidden = true;
+      skipArButton.hidden = true;
+      puzzleLayer.classList.add("is-visible");
+      watchModelLoad();
+      if (navigator.vibrate) navigator.vibrate(45);
+    }
+    function mountOnTarget(target) {
+      if (cleared || preview || !target.object3D || !puzzleModelHolder.object3D) return;
+      activeTarget = target;
+      tracking = true;
+      // Keep the model in marker coordinates, not camera coordinates.
+      target.object3D.add(puzzleModelHolder.object3D);
+      puzzleModelHolder.setAttribute("position", "0 0 0.15");
+      puzzleModelHolder.setAttribute("rotation", "0 70 0");
+      puzzleModel.setAttribute("fit-maboroshi-model", "size: 0.35");
+      unlockUi();
+      answerFeedback.textContent = "白い文字を映したまま、左右にゆっくり移動してください。";
+      showState();
+    }
+    function stopCamera() {
+      const system = arScene.systems?.["mindar-image-system"];
+      if (system?.controller && system.video) {
+        try { system.stop(); } catch (error) { console.warn("AR camera cleanup failed", error); }
+      }
+      const videos = new Set([...document.querySelectorAll("body > video"), system?.video]);
+      videos.forEach(video => {
+        if (!video) return;
+        video.pause?.();
+        video.srcObject?.getTracks?.().forEach(track => track.stop());
+        video.remove();
+      });
+      system?.ui?.hideLoading?.();
+      system?.ui?.hideScanning?.();
+      system?.ui?.hideCompatibility?.();
+    }
+    function configurePreviewCamera() {
+      if (!preview) return;
+      puzzleCamera.setAttribute("camera", "near: 0.01; far: 100; fov: 80");
+      const camera = arScene.camera || puzzleCamera.getObject3D?.("camera");
+      if (camera) {
+        camera.near = 0.01;
+        camera.far = 100;
+        camera.fov = 80;
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+      }
+      arScene.renderer?.setClearColor(0x07101b, 1);
+    }
+    function previewModel() {
+      if (cleared || !puzzleCamera.object3D || !puzzleModelHolder.object3D) return;
+      preview = true;
+      tracking = false;
+      document.body.classList.add("is-puzzle-view", "is-fallback");
+      puzzleCamera.object3D.add(puzzleModelHolder.object3D);
+      puzzleModelHolder.setAttribute("position", "0 0 -1.15");
+      puzzleModelHolder.setAttribute("rotation", "0 45 0");
+      puzzleModel.setAttribute("fit-maboroshi-model", "size: 0.43");
+      stopCamera();
+      configurePreviewCamera();
+      movementHint.textContent = "読み取りを省略した確認表示です";
+      answerFeedback.textContent = "ARで遊ぶときは、ページを開き直して像を読み取ってください。";
+      unlockUi();
+      showState();
+    }
+    function guardPreviewLifecycle() {
+      const system = arScene.systems?.["mindar-image-system"];
+      if (!system || system.previewGuard) return;
+      for (const method of ["start", "_startAR"]) {
+        const original = system[method]?.bind(system);
+        if (original) system[method] = () => preview || cleared ? stopCamera() : original();
+      }
+      const resize = system._resize?.bind(system);
+      if (resize) system._resize = () => preview ? configurePreviewCamera() : resize();
+      system.previewGuard = true;
+    }
+    guardPreviewLifecycle();
+    arScene.addEventListener("loaded", () => { guardPreviewLifecycle(); if (preview) stopCamera(); });
+    arScene.addEventListener("arReady", () => {
+      if (preview || cleared) { stopCamera(); configurePreviewCamera(); return; }
+      scanFeedback.textContent = "像を枠に入れ、少し待ってください。";
+    });
+    arScene.addEventListener("arError", () => {
+      if (preview || cleared) { stopCamera(); return; }
+      scanFeedback.textContent = "カメラを開始できませんでした。ブラウザーのカメラ許可を確認してください。";
+    });
+    window.addEventListener("resize", configurePreviewCamera);
+    window.addEventListener("pagehide", stopCamera);
+    puzzleModel.addEventListener("model-loaded", () => {
+      modelReady = true;
+      modelLoadFailed = false;
+      clearTimeout(modelLoadTimer);
+      showState();
+    });
+    puzzleModel.addEventListener("model-error", () => {
+      modelReady = false;
+      modelLoadFailed = true;
+      clearTimeout(modelLoadTimer);
+      showState();
+    });
+    retryModelButton.addEventListener("click", () => {
+      modelReady = false;
+      modelLoadFailed = false;
+      showState();
+      watchModelLoad();
+      puzzleModel.removeAttribute("gltf-model");
+      puzzleModel.setAttribute("gltf-model", `./models/maboroshi.glb?v=20261027-white1&retry=${Date.now()}`);
+    });
+    answerForm.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!hasShownModel || cleared) return;
+      const answer = normalizeAnswer(answerInput.value);
+      if (!answer) { answerFeedback.textContent = "読めた言葉を入力してください。"; return; }
+      if (![...ACCEPTED_ANSWERS].some(candidate => normalizeAnswer(candidate) === answer)) {
+        wrongAttempts += 1;
+        answerFeedback.textContent = preview ? "まだ違うようです。文字をもう一度見てください。"
+          : wrongAttempts === 1 ? "像を映したまま、見る位置を少し横へ変えてみよう。"
+          : "文字が重なって読める位置を探してください。";
+        answerInput.select();
+        if (navigator.vibrate) navigator.vibrate(45);
+        return;
+      }
+      localStorage.setItem(SUCCESS_KEY, "true");
+      cleared = true;
+      showState();
+      stopCamera();
+      puzzleLayer.classList.remove("is-visible");
+      clearLayer.classList.add("is-visible");
+      if (navigator.vibrate) navigator.vibrate([60, 40, 100]);
+    });
+    backButton.addEventListener("click", () => { location.href = "../index.html"; });
+    gTargets.forEach(target => {
+      target.addEventListener("targetFound", () => mountOnTarget(target));
+      target.addEventListener("targetLost", () => {
+        if (target !== activeTarget || preview || cleared) return;
+        tracking = false;
+        showState();
+      });
+    });
+    skipArButton.addEventListener("click", previewModel);
+    showState();
+  </script>
+  <script src="../debug-tools.js?v=20261026-arrival"></script>
+</body>
+</html>
