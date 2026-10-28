@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="g-puzzle-version" content="20261028-anchored1">
+  <meta name="g-puzzle-version" content="20261029-size1">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="stylesheet" href="../screen.css?v=20261027">
   <title>G館AR｜石のアートを取り戻せ</title>
@@ -185,27 +185,6 @@
     .clear-card h2 { margin: 0 0 10px; }
     .clear-card p { margin: 0 0 17px; line-height: 1.7; }
     .back-button { width: 100%; }
-    body.is-puzzle-view { background: #07101b; }
-    body.is-puzzle-view > video { display: none !important; }
-    body.is-puzzle-view .a-canvas { background: #07101b !important; }
-    body.is-puzzle-view .mindar-ui-overlay { display: none !important; }
-    body.is-puzzle-view .puzzle-layer { background: transparent; }
-    body.is-puzzle-view .puzzle-card,
-    body.is-puzzle-view .answer-panel {
-      color: #171717;
-      background: rgba(255, 255, 255, .94);
-      border-color: rgba(0, 0, 0, .16);
-      box-shadow: 0 14px 38px rgba(0, 0, 0, .12);
-      backdrop-filter: none;
-    }
-    body.is-puzzle-view .puzzle-card .eyebrow { color: #7a4e00; }
-    body.is-puzzle-view .move-hint {
-      color: #171717;
-      background: rgba(255, 255, 255, .94);
-      border-color: rgba(0, 0, 0, .18);
-    }
-    body.is-puzzle-view .answer-feedback { color: #171717; }
-
     .model-status {
       position: absolute;
       top: 47%;
@@ -228,8 +207,9 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script>
+    const MABOROSHI_MODEL_SIZE = 0.6; // 表示サイズ。変更前は0.35。大きい数値ほど大きく表示。
     if (window.AFRAME) AFRAME.registerComponent("fit-maboroshi-model", {
-      schema: { size: { type: "number", default: 0.35 } },
+      schema: { size: { type: "number", default: MABOROSHI_MODEL_SIZE } },
       init() {
         this.bounds = null;
         this.el.addEventListener("model-loaded", () => {
@@ -256,7 +236,7 @@
       }
     });
   </script>
-  <link rel="stylesheet" href="../ar-scan.css?v=20261026">
+  <link rel="stylesheet" href="../ar-scan.css?v=20261029-recognition1">
 </head>
 <body>
   <section class="ar-scan" id="scanCard" aria-live="polite">
@@ -308,7 +288,6 @@
     </div>
   </section>
 
-  <button class="ar-scan-skip" id="skipArButton" type="button">読み取りをスキップ</button>
 
   <a-scene id="arScene"
     mindar-image="imageTargetSrc: ./targets/g-object.mind?v=20261027-d4g4; autoStart: true; maxTrack: 1; warmupTolerance: 1; missTolerance: 10; filterMinCF: 0.001; filterBeta: 1000; uiScanning: false; uiLoading: true;"
@@ -322,7 +301,7 @@
     </a-assets>
     <a-camera id="puzzleCamera" position="0 0 0" look-controls="enabled: false"></a-camera>
     <a-entity id="puzzleModelHolder" visible="false" position="0 0 0.15" rotation="0 70 0">
-      <a-entity id="puzzleModel" gltf-model="#maboroshiAsset" fit-maboroshi-model="size: 0.35"></a-entity>
+      <a-entity id="puzzleModel" gltf-model="#maboroshiAsset" fit-maboroshi-model></a-entity>
     </a-entity>
     <a-entity id="gTarget" mindar-image-target="targetIndex: 0"></a-entity>
     <a-entity id="gTarget1" mindar-image-target="targetIndex: 1"></a-entity>
@@ -343,17 +322,13 @@
     const answerFeedback = document.getElementById("answerFeedback");
     const clearLayer = document.getElementById("clearLayer");
     const backButton = document.getElementById("backButton");
-    const skipArButton = document.getElementById("skipArButton");
     const arScene = document.getElementById("arScene");
-    const puzzleCamera = document.getElementById("puzzleCamera");
     const modelStatus = document.getElementById("modelStatus");
     const modelStatusText = document.getElementById("modelStatusText");
     const retryModelButton = document.getElementById("retryModelButton");
-    const movementHint = document.getElementById("movementHint");
     const gTargets = [...document.querySelectorAll("[mindar-image-target]")];
     let unlocked = false;
     let tracking = false;
-    let preview = false;
     let cleared = false;
     let activeTarget = null;
     let hasShownModel = false;
@@ -366,7 +341,7 @@
       return value.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
     }
     function showState() {
-      const canShow = unlocked && modelReady && (preview || tracking) && !cleared;
+      const canShow = unlocked && modelReady && tracking && !cleared;
       puzzleModelHolder.setAttribute("visible", canShow);
       if (canShow) hasShownModel = true;
       answerForm.hidden = !hasShownModel || cleared;
@@ -391,20 +366,19 @@
       if (unlocked) return;
       unlocked = true;
       scanCard.hidden = true;
-      skipArButton.hidden = true;
       puzzleLayer.classList.add("is-visible");
       watchModelLoad();
       if (navigator.vibrate) navigator.vibrate(45);
     }
     function mountOnTarget(target) {
-      if (cleared || preview || !target.object3D || !puzzleModelHolder.object3D) return;
+      if (cleared || !target.object3D || !puzzleModelHolder.object3D) return;
       activeTarget = target;
       tracking = true;
       // Keep the model in marker coordinates, not camera coordinates.
       target.object3D.add(puzzleModelHolder.object3D);
       puzzleModelHolder.setAttribute("position", "0 0 0.15");
       puzzleModelHolder.setAttribute("rotation", "0 70 0");
-      puzzleModel.setAttribute("fit-maboroshi-model", "size: 0.35");
+      puzzleModel.setAttribute("fit-maboroshi-model", "size", MABOROSHI_MODEL_SIZE);
       unlockUi();
       answerFeedback.textContent = "白い文字を映したまま、左右にゆっくり移動してください。";
       showState();
@@ -425,57 +399,25 @@
       system?.ui?.hideScanning?.();
       system?.ui?.hideCompatibility?.();
     }
-    function configurePreviewCamera() {
-      if (!preview) return;
-      puzzleCamera.setAttribute("camera", "near: 0.01; far: 100; fov: 80");
-      const camera = arScene.camera || puzzleCamera.getObject3D?.("camera");
-      if (camera) {
-        camera.near = 0.01;
-        camera.far = 100;
-        camera.fov = 80;
-        camera.aspect = innerWidth / innerHeight;
-        camera.updateProjectionMatrix();
-      }
-      arScene.renderer?.setClearColor(0x07101b, 1);
-    }
-    function previewModel() {
-      if (cleared || !puzzleCamera.object3D || !puzzleModelHolder.object3D) return;
-      preview = true;
-      tracking = false;
-      document.body.classList.add("is-puzzle-view", "is-fallback");
-      puzzleCamera.object3D.add(puzzleModelHolder.object3D);
-      puzzleModelHolder.setAttribute("position", "0 0 -1.15");
-      puzzleModelHolder.setAttribute("rotation", "0 45 0");
-      puzzleModel.setAttribute("fit-maboroshi-model", "size: 0.43");
-      stopCamera();
-      configurePreviewCamera();
-      movementHint.textContent = "読み取りを省略した確認表示です";
-      answerFeedback.textContent = "ARで遊ぶときは、ページを開き直して像を読み取ってください。";
-      unlockUi();
-      showState();
-    }
-    function guardPreviewLifecycle() {
+    function guardCameraLifecycle() {
       const system = arScene.systems?.["mindar-image-system"];
-      if (!system || system.previewGuard) return;
+      if (!system || system.cameraGuard) return;
       for (const method of ["start", "_startAR"]) {
         const original = system[method]?.bind(system);
-        if (original) system[method] = () => preview || cleared ? stopCamera() : original();
+        if (original) system[method] = () => cleared ? stopCamera() : original();
       }
-      const resize = system._resize?.bind(system);
-      if (resize) system._resize = () => preview ? configurePreviewCamera() : resize();
-      system.previewGuard = true;
+      system.cameraGuard = true;
     }
-    guardPreviewLifecycle();
-    arScene.addEventListener("loaded", () => { guardPreviewLifecycle(); if (preview) stopCamera(); });
+    guardCameraLifecycle();
+    arScene.addEventListener("loaded", guardCameraLifecycle);
     arScene.addEventListener("arReady", () => {
-      if (preview || cleared) { stopCamera(); configurePreviewCamera(); return; }
+      if (cleared) { stopCamera(); return; }
       scanFeedback.textContent = "像を枠に入れ、少し待ってください。";
     });
     arScene.addEventListener("arError", () => {
-      if (preview || cleared) { stopCamera(); return; }
+      if (cleared) { stopCamera(); return; }
       scanFeedback.textContent = "カメラを開始できませんでした。ブラウザーのカメラ許可を確認してください。";
     });
-    window.addEventListener("resize", configurePreviewCamera);
     window.addEventListener("pagehide", stopCamera);
     puzzleModel.addEventListener("model-loaded", () => {
       modelReady = true;
@@ -504,8 +446,7 @@
       if (!answer) { answerFeedback.textContent = "読めた言葉を入力してください。"; return; }
       if (![...ACCEPTED_ANSWERS].some(candidate => normalizeAnswer(candidate) === answer)) {
         wrongAttempts += 1;
-        answerFeedback.textContent = preview ? "まだ違うようです。文字をもう一度見てください。"
-          : wrongAttempts === 1 ? "像を映したまま、見る位置を少し横へ変えてみよう。"
+        answerFeedback.textContent = wrongAttempts === 1 ? "像を映したまま、見る位置を少し横へ変えてみよう。"
           : "文字が重なって読める位置を探してください。";
         answerInput.select();
         if (navigator.vibrate) navigator.vibrate(45);
@@ -523,12 +464,11 @@
     gTargets.forEach(target => {
       target.addEventListener("targetFound", () => mountOnTarget(target));
       target.addEventListener("targetLost", () => {
-        if (target !== activeTarget || preview || cleared) return;
+        if (target !== activeTarget || cleared) return;
         tracking = false;
         showState();
       });
     });
-    skipArButton.addEventListener("click", previewModel);
     showState();
   </script>
   <script src="../debug-tools.js?v=20261026-arrival"></script>
