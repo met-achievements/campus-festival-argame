@@ -343,7 +343,7 @@
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <link rel="stylesheet" href="../ar-scan.css?v=20261026">
+  <link rel="stylesheet" href="../ar-scan.css?v=20261029-recognition1">
 </head>
 
 <body class="ar-page">
@@ -356,7 +356,6 @@
     <div class="ar-scan-frame" aria-hidden="true"></div>
   </section>
 
-  <button class="ar-scan-skip" id="skipArButton" type="button">読み取りをスキップ</button>
 
   <div class="start-overlay" id="startOverlay">
     <div class="start-card">
@@ -465,7 +464,6 @@
     const timeUpPanel = document.getElementById("timeUpPanel");
     const bTarget = document.getElementById("bTarget");
     const debugBox = document.getElementById("debugBox");
-    const skipArButton = document.getElementById("skipArButton");
     const backButton = document.getElementById("backButton");
 
     let unlocked = false;
@@ -724,17 +722,15 @@
       }, 300);
     }
 
-    function unlockGame(skipped = false) {
+    function unlockGame() {
       if (unlocked) return;
       unlocked = true;
       scanHud.hidden = true;
-      skipArButton.hidden = true;
-      debugBox.textContent = skipped ? "target: skipped" : "target: 0";
+      debugBox.textContent = "target: 0";
       startOverlay.classList.add("is-visible");
     }
 
-    bTarget.addEventListener("targetFound", () => unlockGame(false));
-    skipArButton.addEventListener("click", () => unlockGame(true));
+    bTarget.addEventListener("targetFound", unlockGame);
 
     bTarget.addEventListener("targetLost", () => {
       debugBox.textContent = "target: -";
